@@ -13076,7 +13076,7 @@ div#notebook {
 
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[1]:</div>
+<div class="prompt input_prompt">In&nbsp;[2]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
@@ -13092,7 +13092,7 @@ div#notebook {
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[34]:</div>
+<div class="prompt input_prompt">In&nbsp;[3]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="c1">## Constants: ##</span>
@@ -13104,9 +13104,11 @@ div#notebook {
 
 <span class="c1"># Get some dates we need and convert to strings</span>
 <span class="n">today</span> <span class="o">=</span> <span class="n">date</span><span class="o">.</span><span class="n">today</span><span class="p">()</span>
-<span class="n">seven_days</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">today</span> <span class="o">-</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">days</span> <span class="o">=</span> <span class="mi">7</span><span class="p">))</span>  
 <span class="n">yesterday</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">today</span> <span class="o">-</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">days</span> <span class="o">=</span> <span class="mi">1</span><span class="p">))</span>
 <span class="n">day_before</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">today</span> <span class="o">-</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">days</span> <span class="o">=</span> <span class="mi">2</span><span class="p">))</span>
+<span class="n">seven_days</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">today</span> <span class="o">-</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">days</span> <span class="o">=</span> <span class="mi">7</span><span class="p">))</span>  
+<span class="n">eight_days</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">today</span> <span class="o">-</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">days</span> <span class="o">=</span> <span class="mi">8</span><span class="p">))</span>
+
 
 <span class="c1">## import data files ##</span>
 <span class="c1"># 2019 County population data</span>
@@ -13118,7 +13120,7 @@ div#notebook {
 <span class="n">url</span> <span class="o">=</span> <span class="s1">&#39;https://raw.githubusercontent.com/nytimes/covid-19-data/master/us-counties.csv&#39;</span>
 <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
 <span class="n">df</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="s1">&#39;date&#39;</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="c1"># Set the index as the date col so we can use the truncate function</span>
-<span class="n">cases_df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">truncate</span><span class="p">(</span><span class="n">before</span> <span class="o">=</span> <span class="n">seven_days</span><span class="p">,</span> <span class="n">after</span> <span class="o">=</span> <span class="n">yesterday</span><span class="p">)</span>
+<span class="n">cases_df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">truncate</span><span class="p">(</span><span class="n">before</span> <span class="o">=</span> <span class="n">eight_days</span><span class="p">,</span> <span class="n">after</span> <span class="o">=</span> <span class="n">yesterday</span><span class="p">)</span>
 
 <span class="c1"># Make a df of just yesterday&#39;s data and one of the day before yesterday&#39;s data</span>
 <span class="n">yesterday_df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">truncate</span><span class="p">(</span><span class="n">before</span> <span class="o">=</span> <span class="n">yesterday</span><span class="p">)</span>
@@ -13139,24 +13141,42 @@ div#notebook {
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[52]:</div>
+<div class="prompt input_prompt">In&nbsp;[60]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="c1">#state = input(&quot;Choose a state: &quot;)</span>
-<span class="n">state</span> <span class="o">=</span> <span class="s1">&#39;Oregon&#39;</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">state</span> <span class="o">=</span> <span class="nb">input</span><span class="p">(</span><span class="s2">&quot;Choose a state: &quot;</span><span class="p">)</span>
 
 <span class="c1"># Make a df from the rows are just the chosen state</span>
 <span class="n">state_df</span> <span class="o">=</span> <span class="n">county_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">county_df</span><span class="p">[</span><span class="s1">&#39;State&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">state</span><span class="p">]</span>
 
 <span class="c1"># Make a list of the values in the &#39;county&#39; column and print it so the user can reference it</span>
 <span class="n">counties_list</span> <span class="o">=</span> <span class="n">state_df</span><span class="p">[</span><span class="s1">&#39;County&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
-<span class="c1">#print(counties_list)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">counties_list</span><span class="p">)</span>
 
-<span class="c1">#county = input(&quot;Choose a county from the list: &quot;)</span>
-<span class="n">county</span> <span class="o">=</span> <span class="s1">&#39;Multnomah&#39;</span>
+<span class="n">county</span> <span class="o">=</span> <span class="nb">input</span><span class="p">(</span><span class="s2">&quot;Choose a county from the list: &quot;</span><span class="p">)</span>
 </pre></div>
 
     </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>Choose a state: Oregon
+[&#39;Baker&#39;, &#39;Benton&#39;, &#39;Clackamas&#39;, &#39;Clatsop&#39;, &#39;Columbia&#39;, &#39;Coos&#39;, &#39;Crook&#39;, &#39;Curry&#39;, &#39;Deschutes&#39;, &#39;Douglas&#39;, &#39;Gilliam&#39;, &#39;Grant&#39;, &#39;Harney&#39;, &#39;Hood River&#39;, &#39;Jackson&#39;, &#39;Jefferson&#39;, &#39;Josephine&#39;, &#39;Klamath&#39;, &#39;Lake&#39;, &#39;Lane&#39;, &#39;Lincoln&#39;, &#39;Linn&#39;, &#39;Malheur&#39;, &#39;Marion&#39;, &#39;Morrow&#39;, &#39;Multnomah&#39;, &#39;Polk&#39;, &#39;Sherman&#39;, &#39;Tillamook&#39;, &#39;Umatilla&#39;, &#39;Union&#39;, &#39;Wallowa&#39;, &#39;Wasco&#39;, &#39;Washington&#39;, &#39;Wheeler&#39;, &#39;Yamhill&#39;]
+Choose a county from the list: Multnomah
+</pre>
+</div>
+</div>
+
 </div>
 </div>
 
@@ -13164,14 +13184,14 @@ div#notebook {
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>Let's use this info to make a special df that's just our county for the last 7 days.</p>
+<p>Let's use this info to make a special df that's just our county for the last 8 days.</p>
 
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[53]:</div>
+<div class="prompt input_prompt">In&nbsp;[61]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># Using the county name, create a df that is just one row </span>
@@ -13196,7 +13216,7 @@ div#notebook {
 
 <div class="output_area">
 
-    <div class="prompt output_prompt">Out[53]:</div>
+    <div class="prompt output_prompt">Out[61]:</div>
 
 
 
@@ -13291,6 +13311,15 @@ div#notebook {
       <td>28678</td>
       <td>464.0</td>
     </tr>
+    <tr>
+      <th>7</th>
+      <td>2021-01-21</td>
+      <td>Multnomah</td>
+      <td>Oregon</td>
+      <td>41051.0</td>
+      <td>28796</td>
+      <td>464.0</td>
+    </tr>
   </tbody>
 </table>
 </div>
@@ -13326,15 +13355,15 @@ div#notebook {
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[54]:</div>
+<div class="prompt input_prompt">In&nbsp;[62]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># Convert the date column to a list</span>
 <span class="n">dates_list</span> <span class="o">=</span> <span class="n">target_df</span><span class="p">[</span><span class="s1">&#39;date&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
 
 <span class="c1"># Use Pandas to make a stable happy array because it&#39;s a datetime</span>
-<span class="n">dates</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DatetimeIndex</span><span class="p">(</span><span class="n">dates_list</span><span class="p">)</span>
-
+<span class="c1"># and remove the earliest date (the 8th day back) so we have a 7 dates</span>
+<span class="n">dates</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DatetimeIndex</span><span class="p">(</span><span class="n">dates_list</span><span class="p">)</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
 <span class="n">dates</span>
 </pre></div>
 
@@ -13348,15 +13377,61 @@ div#notebook {
 
 <div class="output_area">
 
-    <div class="prompt output_prompt">Out[54]:</div>
+    <div class="prompt output_prompt">Out[62]:</div>
 
 
 
 
 <div class="output_text output_subarea output_execute_result">
-<pre>DatetimeIndex([&#39;2021-01-14&#39;, &#39;2021-01-15&#39;, &#39;2021-01-16&#39;, &#39;2021-01-17&#39;,
-               &#39;2021-01-18&#39;, &#39;2021-01-19&#39;, &#39;2021-01-20&#39;],
+<pre>DatetimeIndex([&#39;2021-01-15&#39;, &#39;2021-01-16&#39;, &#39;2021-01-17&#39;, &#39;2021-01-18&#39;,
+               &#39;2021-01-19&#39;, &#39;2021-01-20&#39;, &#39;2021-01-21&#39;],
               dtype=&#39;datetime64[ns]&#39;, freq=None)</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Now let's get the number of new cases for each day. That's the number of new cases subtract the number of new cases the day before</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[63]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># Convert the cases column to a list</span>
+<span class="n">cases_list</span> <span class="o">=</span> <span class="n">target_df</span><span class="p">[</span><span class="s1">&#39;cases&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+
+<span class="c1"># Create a new list from (# cases) - (# previous cases)</span>
+<span class="n">new_cases</span> <span class="o">=</span> <span class="p">[</span><span class="n">y</span> <span class="o">-</span> <span class="n">x</span> <span class="k">for</span> <span class="n">x</span><span class="p">,</span><span class="n">y</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">cases_list</span><span class="p">,</span><span class="n">cases_list</span><span class="p">[</span><span class="mi">1</span><span class="p">:])]</span>
+<span class="n">new_cases</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt output_prompt">Out[63]:</div>
+
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>[178, 169, 100, 130, 119, 92, 118]</pre>
 </div>
 
 </div>
@@ -13375,21 +13450,21 @@ div#notebook {
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[39]:</div>
+<div class="prompt input_prompt">In&nbsp;[64]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># Put the dates in a Numpy array and reshape to run the regression</span>
 <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">dates</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;datetime64[D]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">))</span>
 
 <span class="c1"># Daily new cases</span>
-<span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="s1">&#39;225&#39;</span><span class="p">,</span> <span class="s1">&#39;7&#39;</span><span class="p">,</span> <span class="s1">&#39;256&#39;</span><span class="p">,</span> <span class="s1">&#39;305&#39;</span><span class="p">,</span> <span class="s1">&#39;185&#39;</span><span class="p">,</span> <span class="s1">&#39;178&#39;</span><span class="p">,</span> <span class="s1">&#39;169&#39;</span><span class="p">])</span>
+<span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">new_cases</span><span class="p">)</span>
 
 <span class="c1"># Make the regression model</span>
 <span class="n">model</span> <span class="o">=</span> <span class="n">LinearRegression</span><span class="p">()</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
 
 <span class="c1">#Get the slope and return it as a number (as opposed to an array)</span>
 <span class="n">slope</span> <span class="o">=</span> <span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">coef_</span><span class="p">)</span><span class="o">.</span><span class="n">item</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">slope</span><span class="p">)</span>
+<span class="n">slope</span>
 </pre></div>
 
     </div>
@@ -13402,13 +13477,15 @@ div#notebook {
 
 <div class="output_area">
 
-    <div class="prompt"></div>
+    <div class="prompt output_prompt">Out[64]:</div>
 
 
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>3.6785714285714293
-</pre>
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>-11.249999999999996</pre>
 </div>
+
 </div>
 
 </div>
@@ -13425,14 +13502,34 @@ div#notebook {
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="prompt input_prompt">In&nbsp;[65]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">Dnp</span> <span class="o">=</span> <span class="p">(</span><span class="n">incubation</span><span class="o">*</span><span class="n">slope</span><span class="p">)</span><span class="o">+</span><span class="mi">169</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">Dnp</span><span class="p">)</span>
+<span class="n">Dnp</span>
 </pre></div>
 
     </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt output_prompt">Out[65]:</div>
+
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>123.10000000000002</pre>
+</div>
+
+</div>
+
 </div>
 </div>
 
@@ -13447,14 +13544,37 @@ div#notebook {
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="prompt input_prompt">In&nbsp;[66]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">Irp</span> <span class="o">=</span> <span class="p">(</span><span class="n">Dnp</span> <span class="o">*</span> <span class="n">ascertainment</span> <span class="o">*</span> <span class="n">incubation</span><span class="p">)</span><span class="o">/</span><span class="mi">812855</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># Using the county name, create a df that is just one row </span>
+<span class="c1"># and access the location containing the FIPS</span>
+<span class="n">pop</span> <span class="o">=</span> <span class="n">county_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">county_df</span><span class="p">[</span><span class="s1">&#39;FIPS&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">fips</span><span class="p">,</span> <span class="s1">&#39;Population&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">pop</span><span class="p">)</span>
+<span class="n">Irp</span> <span class="o">=</span> <span class="p">(</span><span class="n">Dnp</span> <span class="o">*</span> <span class="n">ascertainment</span> <span class="o">*</span> <span class="n">incubation</span><span class="p">)</span><span class="o">/</span><span class="n">pop</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">Irp</span><span class="p">)</span>
 </pre></div>
 
     </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>812855
+0.006178814179650739
+</pre>
+</div>
+</div>
+
 </div>
 </div>
 
@@ -13468,12 +13588,12 @@ div#notebook {
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="prompt input_prompt">In&nbsp;[67]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">n1</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># Number of people with the Pfizer vaccine</span>
 <span class="n">n2</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># Number of people with the Moderna vaccine</span>
-<span class="n">n3</span> <span class="o">=</span> <span class="mi">7</span>  <span class="c1"># Number of people unvaccinated :-0</span>
+<span class="n">n3</span> <span class="o">=</span> <span class="mi">10</span>  <span class="c1"># Number of people unvaccinated :-0</span>
 
 <span class="n">pfizer_folks_A</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="p">(</span><span class="n">Vne1</span> <span class="o">*</span> <span class="n">Irp</span><span class="p">))</span> <span class="o">**</span> <span class="n">n1</span><span class="p">)</span>
 <span class="n">moderna_folks_A</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="p">(</span><span class="n">Vne2</span> <span class="o">*</span> <span class="n">Irp</span><span class="p">))</span> <span class="o">**</span> <span class="n">n2</span><span class="p">)</span>
@@ -13485,29 +13605,43 @@ div#notebook {
 
 <span class="n">A</span> <span class="o">=</span> <span class="n">pfizer_folks_A</span> <span class="o">+</span> <span class="n">moderna_folks_A</span> <span class="o">+</span> <span class="n">unvacc_folks_A</span>
 <span class="n">B</span> <span class="o">=</span> <span class="n">pfizer_folks_B</span> <span class="o">+</span> <span class="n">moderna_folks_B</span> <span class="o">+</span> <span class="n">unvacc_folks_B</span>
+<span class="k">if</span> <span class="n">B</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+    <span class="n">B</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="k">if</span> <span class="n">B</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">B</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
 
 <span class="n">result</span> <span class="o">=</span> <span class="p">(</span><span class="n">A</span> <span class="o">*</span> <span class="n">B</span><span class="p">)</span> <span class="o">*</span> <span class="mi">100</span>
 <span class="n">chance</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;You have a &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">chance</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;% &#39;</span> <span class="o">+</span> <span class="s1">&#39;chance of an exposure occuring at this gathering.&#39;</span><span class="p">)</span>
 
-<span class="k">if</span> <span class="n">chance</span> <span class="o">&gt;=</span> <span class="mi">20</span><span class="p">:</span>
+<span class="k">if</span> <span class="n">chance</span> <span class="o">&gt;=</span> <span class="mi">10</span><span class="p">:</span>
     <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;I wouldn</span><span class="se">\&#39;</span><span class="s1">t go&#39;</span> <span class="p">)</span>
+<span class="k">if</span> <span class="n">chance</span> <span class="o">&gt;=</span> <span class="mi">20</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Aw, HELL naw!&#39;</span> <span class="p">)</span>
 </pre></div>
 
     </div>
 </div>
 </div>
 
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span> 
-</pre></div>
+<div class="output_wrapper">
+<div class="output">
 
-    </div>
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>0.06009814664371438
+You have a 6.01% chance of an exposure occuring at this gathering.
+</pre>
+</div>
+</div>
+
 </div>
 </div>
 
