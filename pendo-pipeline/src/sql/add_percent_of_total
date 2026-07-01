@@ -1,0 +1,7 @@
+SELECT
+  createdByJobRole,
+  COUNT(*) AS n,
+  ROUND(100.0 * COUNT(*) / (SELECT COUNT(*) FROM guides_raw), 1) AS pct
+FROM guides_raw
+GROUP BY 1
+ORDER BY n DESC;

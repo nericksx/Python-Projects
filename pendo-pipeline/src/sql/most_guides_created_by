@@ -1,0 +1,8 @@
+SELECT
+  createdByFirst,
+  createdByLast,
+  COUNT(*) AS guides_created
+FROM guides_raw
+GROUP BY 1,2
+ORDER BY guides_created DESC
+LIMIT 20;

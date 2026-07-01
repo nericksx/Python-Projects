@@ -1,0 +1,11 @@
+.env
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+# Local OS/editor clutter
+.DS_Store
+.vscode/
+*.code-workspace
+
+# Local backup files
+*.old

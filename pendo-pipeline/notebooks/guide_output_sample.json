@@ -1,0 +1,194 @@
+    
+    {
+    "createdByUser": {
+      "id": "4509507326640128",
+      "username": "sahra_broadnax@homedepot.com",
+      "first": "Sahra",
+      "last": "Broadnax",
+      "role": 2,
+      "userType": "normal",
+      "hasLoggedIn": true,
+      "lastLogin": 1768833329816,
+      "useCase": "unset",
+      "jobRole": "unset"
+    },
+    "createdAt": 1737131711752,
+    "lastUpdatedByUser": {
+      "id": "4509507326640128",
+      "username": "sahra_broadnax@homedepot.com",
+      "first": "Sahra",
+      "last": "Broadnax",
+      "role": 2,
+      "userType": "normal",
+      "hasLoggedIn": true,
+      "lastLogin": 1768833329816,
+      "useCase": "unset",
+      "jobRole": "unset"
+    },
+    "lastUpdatedAt": 1738361097599,
+    "kind": "Guide",
+    "rootVersionId": "7RcLTUdUfBIdnX_hio9-6VsAH3A",
+    "stableVersionId": "7RcLTUdUfBIdnX_hio9-6VsAH3A-20250131220457.618262260",
+    "appId": -323232,
+    "appIds": [
+      -323232
+    ],
+    "id": "7RcLTUdUfBIdnX_hio9-6VsAH3A",
+    "name": "IAA | UMUX Lite Survey",
+    "state": "_pendingReview_",
+    "emailState": "",
+    "launchMethod": "auto",
+    "isMultiStep": false,
+    "isTraining": false,
+    "steps": [
+      {
+        "id": "BrCid9oZwA2EhCO8JjtLsQsxC4o",
+        "guideId": "7RcLTUdUfBIdnX_hio9-6VsAH3A",
+        "templateId": "building-block-guide",
+        "type": "building-block",
+        "pageId": "9lcOVC1GhtZoZBES1S5FavuQEFA",
+        "regexUrlRule": "^https?://[^/]*/reports/in-aisle-assistance/?(?:;[^#]*)?(?:\\?[^#]*)?(?:#.*)?$",
+        "elementPathRule": "",
+        "triggerElementPathRule": "",
+        "confirmationElementPathRule": "",
+        "contentType": "text/html; charset=utf-8",
+        "buildingBlocksUrl": "https://pendo-static-5690975058788352.storage.googleapis.com/guide-content/7RcLTUdUfBIdnX_hio9-6VsAH3A/BrCid9oZwA2EhCO8JjtLsQsxC4o/Aon1fvus3X5oYq85xf33S_aTdiQ.buildingBlocks.json",
+        "domUrl": "https://pendo-static-5690975058788352.storage.googleapis.com/guide-content/7RcLTUdUfBIdnX_hio9-6VsAH3A/BrCid9oZwA2EhCO8JjtLsQsxC4o/7iryK8_xtJsx6PLk8Zbau2nFGxY.dom.json?sha256=zIp4Z1MDVAHFaqwZTIz0HiHDQT3demFWO3mZBTlRk6E",
+        "domJsonpUrl": "https://pendo-static-5690975058788352.storage.googleapis.com/guide-content/7RcLTUdUfBIdnX_hio9-6VsAH3A/BrCid9oZwA2EhCO8JjtLsQsxC4o/lpbFkxwH-21_TWunx2XmTJTWXS0.dom.jsonp?sha256=2jx1VA1nTqGxjcaEE88WobucSapxZQ4o0dTO07Txl8A",
+        "rank": 10000000,
+        "pollIds": [
+          "qd8lfl27lk",
+          "757wmmdrr1",
+          "vieknbkt9o"
+        ],
+        "advanceMethod": "button",
+        "attributes": {
+          "css": "",
+          "themeId": "wRHpPDt61GU9vZN1rQBoceQLPlA",
+          "isAutoFocus": true,
+          "blockOutUI": {
+            "additionalElements": "",
+            "enabled": false,
+            "padding": {
+              "bottom": 0,
+              "left": 0,
+              "right": 0,
+              "top": 0
+            }
+          },
+          "elementSelectionType": "suggested",
+          "advanceActions": null
+        },
+        "lastUpdatedAt": 1738360953295,
+        "resetAt": 0,
+        "launchUrl": "https://myview-cold.apps.homedepot.com/reporting/store"
+      }
+    ],
+    "attributes": {
+      "type": "building-block",
+      "device": {
+        "type": "all"
+      },
+      "sharedServiceVersion": "4.27.9",
+      "priority": 504
+    },
+    "audience": [
+      {
+        "source": {
+          "visitors": null
+        }
+      },
+      {
+        "eval": {
+          "accountId": "metadata.auto.accountids"
+        }
+      },
+      {
+        "unwind": {
+          "field": "accountId",
+          "keepEmpty": true
+        }
+      },
+      {
+        "select": {
+          "visitorId": "visitorId"
+        }
+      },
+      {
+        "identified": "visitorId"
+      }
+    ],
+    "audienceUiHint": {
+      "filters": [
+        {
+          "kind": "visitor",
+          "segmentId": "everyone"
+        }
+      ]
+    },
+    "authoredLanguage": "en-US",
+    "recurrence": 0,
+    "recurrenceEligibilityWindow": 0,
+    "resetAt": 0,
+    "publishedAt": 0,
+    "publishedEver": false,
+    "currentFirstEligibleToBeSeenAt": 0,
+    "polls": [
+      {
+        "id": "qd8lfl27lk",
+        "question": "How useful is the In Aisle Assistance Reporting for you?",
+        "numericResponses": [
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        "idResponses": {
+          "1": "Not useful at all",
+          "5": "Very Useful"
+        },
+        "attributes": {
+          "type": "NumberScale"
+        },
+        "resetAt": 0
+      },
+      {
+        "id": "757wmmdrr1",
+        "question": "Does the In Aisle Assistance Reporting meet your needs?",
+        "numericResponses": [
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        "idResponses": {
+          "1": "Horrible",
+          "5": "Great"
+        },
+        "attributes": {
+          "type": "NumberScale"
+        },
+        "resetAt": 0
+      },
+      {
+        "id": "vieknbkt9o",
+        "question": "\nHow can we improve this feature?",
+        "attributes": {
+          "type": "FreeForm"
+        },
+        "resetAt": 0
+      }
+    ],
+    "conversion": {
+      "itemType": "Page",
+      "itemId": "9lcOVC1GhtZoZBES1S5FavuQEFA",
+      "attributionWindow": 10800000
+    },
+    "isTopLevel": false,
+    "isModule": false,
+    "editorType": "visualDesignStudio",
+    "dependentMetadata": [],
+    "autoCreateFeedback": true
+  },

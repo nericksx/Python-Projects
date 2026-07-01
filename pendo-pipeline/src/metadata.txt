@@ -1,0 +1,136 @@
+{
+    "response": {
+        "location": "request",
+        "mimeType": "application/json"
+    },
+    "requests": [
+        {
+            "pipeline": [
+                {
+                    "spawn": [
+                        [
+                            {
+                                "source": {
+                                    "singleEvents": {
+                                        "appId": "expandAppIds(\"*\")",
+                                        "eventTypeFilters": [
+                                            "meta"
+                                        ]
+                                    },
+                                    "timeSeries": {
+                                        "count": 1,
+                                        "first": "now()",
+                                        "period": "dayRange"
+                                    }
+                                }
+                            },
+                            {
+                                "unmarshal": {
+                                    "metadata": "title"
+                                }
+                            },
+                            {
+                                "filter": "!isNil(metadata.visitor)"
+                            },
+                            {
+                                "eval": {
+                                    "visitorMetadata": "keys(metadata.visitor)"
+                                }
+                            },
+                            {
+                                "unwind": {
+                                    "field": "visitorMetadata"
+                                }
+                            },
+                            {
+                                "group": {
+                                    "group": [
+                                        "appId",
+                                        "visitorMetadata"
+                                    ]
+                                }
+                            },
+                            {
+                                "group": {
+                                    "group": [
+                                        "appId"
+                                    ],
+                                    "fields": {
+                                        "visitorMetadata": {
+                                            "list": "visitorMetadata"
+                                        }
+                                    }
+                                }
+                            }
+                        ],
+                        [
+                            {
+                                "source": {
+                                    "singleEvents": {
+                                        "appId": "expandAppIds(\"*\")",
+                                        "eventTypeFilters": [
+                                            "meta"
+                                        ]
+                                    },
+                                    "timeSeries": {
+                                        "count": 1,
+                                        "first": "now()",
+                                        "period": "dayRange"
+                                    }
+                                }
+                            },
+                            {
+                                "unmarshal": {
+                                    "metadata": "title"
+                                }
+                            },
+                            {
+                                "filter": "!isNil(metadata.account)"
+                            },
+                            {
+                                "eval": {
+                                    "accountMetadata": "keys(metadata.account)"
+                                }
+                            },
+                            {
+                                "unwind": {
+                                    "field": "accountMetadata"
+                                }
+                            },
+                            {
+                                "group": {
+                                    "group": [
+                                        "appId",
+                                        "accountMetadata"
+                                    ]
+                                }
+                            },
+                            {
+                                "group": {
+                                    "group": [
+                                        "appId"
+                                    ],
+                                    "fields": {
+                                        "accountMetadata": {
+                                            "list": "accountMetadata"
+                                        }
+                                    }
+                                }
+                            }
+                        ]
+                    ]
+                },
+                {
+                    "join": {
+                        "fields": [
+                            "appId"
+                        ]
+                    }
+                }
+            ],
+            "name": "singleEvents_metadataByApp",
+            "productArea": "Internal",
+            "subProductArea": "TSLibrary202501"
+        }
+    ]
+}
