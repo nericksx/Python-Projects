@@ -12,6 +12,8 @@ from pathlib import Path
 
 import pandas as pd
 
+from paths import DB_DIR, DUCKDB_PATH
+
 from duckdb_conn import get_connection, write_df, export_table_to_parquet
 
 
@@ -30,7 +32,7 @@ PARQUET_EXPORTS = [
 def load_all(
     tables: dict[str, pd.DataFrame],
     *,
-    db_path: str | Path = "db/pendo.duckdb",
+    db_path: Path | str = DUCKDB_PATH,
 ) -> None:
     """
     Write transformed tables to DuckDB and export selected tables to Parquet.
@@ -39,7 +41,7 @@ def load_all(
     ----------
     tables : dict[str, pd.DataFrame]
         Transformed output tables keyed by table name.
-    db_path : str | Path, default "db/pendo.duckdb"
+    db_path : Path | str = DUCKDB_PATH
         Local DuckDB database path.
 
     Returns
@@ -69,7 +71,7 @@ def load_all(
 
         for table_name in PARQUET_EXPORTS:
             if table_name in tables:
-                parquet_path = db_path.parent / f"{table_name}.parquet"
+                parquet_path = DB_DIR / f"{table_name}.parquet"
                 export_table_to_parquet(
                     conn,
                     table_name,

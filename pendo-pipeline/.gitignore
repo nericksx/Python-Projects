@@ -1,7 +1,15 @@
 .env
+.env.*
 __pycache__/
+*.py[cod]
 *.pyc
 .ipynb_checkpoints/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
 # Local OS/editor clutter
 .DS_Store
 .vscode/
@@ -10,8 +18,13 @@ __pycache__/
 # Local backup files
 *.old
 
+# Local logs
+*.log
+
 # Local generated outputs
 outputs/
 
 # Local database/runtime files
 db/
+*.duckdb
+*.duckdb.wal

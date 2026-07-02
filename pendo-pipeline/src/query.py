@@ -1,14 +1,24 @@
 # src/query.py
 
 import sys
+from pathlib import Path
+
 import duckdb
 import pandas as pd
 
-DB_PATH = "src/db/pendo.duckdb"
+from paths import DUCKDB_PATH
 
 
-def run_query(sql: str) -> pd.DataFrame:
-    conn = duckdb.connect(DB_PATH)
+def run_query(sql: str, db_path: Path | str = DUCKDB_PATH) -> pd.DataFrame:
+    db_path = Path(db_path)
+
+    if not db_path.exists():
+        raise FileNotFoundError(
+            f"DuckDB database does not exist: {db_path}. "
+            "Run the pipeline first to create it."
+        )
+
+    conn = duckdb.connect(str(db_path))
     try:
         return conn.execute(sql).fetchdf()
     finally:
