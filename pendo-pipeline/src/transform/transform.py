@@ -25,6 +25,7 @@ from transform.ux_lite import (
     build_ux_lite_responses,
 )
 
+MAU_TABLE = "pendo_app_mau_rolling_30d"
 
 def _rows_to_df(value: Any) -> pd.DataFrame:
     """
@@ -172,7 +173,7 @@ def _print_debug_summary(
         print(pop_df[existing_pop_cols].head(20).to_string(index=False))
 
 
-def transform_all(raw: dict[str, object], *, debug: bool = False) -> dict[str, object]:
+def transform_all(raw: dict[str, object], *, debug: bool = False) -> dict[str, pd.DataFrame]:
     """
     Transform raw Pendo pipeline outputs into loadable analytics tables.
 
@@ -194,11 +195,11 @@ def transform_all(raw: dict[str, object], *, debug: bool = False) -> dict[str, o
             "guides",
             "aggregations",
             "ux_lite_poll_events",
-            "mau_monthly",
+            MAU_TABLE,
         ],
     )
 
-    tables: dict[str, object] = {}
+    tables: dict[str, pd.DataFrame] = {}
 
     guides = raw["guides"]
     if not isinstance(guides, list):
@@ -247,7 +248,7 @@ def transform_all(raw: dict[str, object], *, debug: bool = False) -> dict[str, o
         registry=registry,
     )
 
-    mau_df = _rows_to_df(raw["mau_monthly"])
+    mau_df = _rows_to_df(raw[MAU_TABLE])
 
     tables["ux_lite_registry"] = registry
     tables["guide_sessions"] = guide_sessions
@@ -255,7 +256,7 @@ def transform_all(raw: dict[str, object], *, debug: bool = False) -> dict[str, o
     tables["ux_lite_local_events"] = score_events
     tables["ux_lite_local_responses"] = responses
     tables["ux_lite_local_comments"] = comment_events
-    tables["mau_monthly"] = mau_df
+    tables[MAU_TABLE] = mau_df
 
     if debug:
         _print_debug_summary(

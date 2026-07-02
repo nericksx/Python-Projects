@@ -20,9 +20,11 @@ from pendo.partitions import PARTITIONS
 from pendo.pulls.partitioned import pull_all
 from pendo.pulls.ux_lite_poll_events import pull_ux_lite_poll_events
 from transform.ux_lite import build_ux_lite_registry
+from datetime import datetime, timezone
 
 
-CUTOFF_MS = 1761955200000  # 2025-11-01 00:00:00 UTC
+CUTOFF_DATE = datetime(2026, 3, 30, tzinfo=timezone.utc)
+CUTOFF_MS = int(CUTOFF_DATE.timestamp() * 1000)
 CHUNK_DAYS = 30
 MS_PER_DAY = 24 * 60 * 60 * 1000
 

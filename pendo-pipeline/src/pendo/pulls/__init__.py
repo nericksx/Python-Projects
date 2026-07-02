@@ -1,5 +1,8 @@
 # src/pendo/pulls/__init__.py
 
+from .registry_mau import pull_registry_mau
+
+
 """
 Registry of independent phase-1 pulls.
 
@@ -39,12 +42,7 @@ PULL_FUNCTIONS: dict[str, Callable[[PendoClient], object]] = {
         )
     },
 
-    "mau_monthly": lambda _client: {
-        "results": pull_all(
-            lambda c: mau_results_to_rows(
-                pull_mau(c, months_back=1)
-            ),
-            partitions=PARTITIONS,
-        )
-    }
+     "pendo_app_mau_rolling_30d": lambda _client: {
+        "results": pull_registry_mau()
+    },
 }
