@@ -15,11 +15,12 @@ import pandas as pd
 
 from pendo.pulls.guides import guides_to_df
 from pendo.pulls.visitor_population import build_population_rows_for_sessions
-from app_registry import included_xm_apps, load_app_registry
+from app_registry import load_app_registry
 from transform.ux_lite import (
     attach_population_to_sessions,
     build_comment_events,
     build_guide_sessions,
+    build_latest_valid_ux_lite_sessions,
     build_poll_lookup,
     build_score_events,
     build_ux_lite_registry,
@@ -28,6 +29,7 @@ from transform.ux_lite import (
 
 MAU_TABLE = "pendo_app_mau_rolling_30d"
 APP_REGISTRY_TABLE = "xm_pendo_app_registry"
+UX_LITE_LATEST_VALID_TABLE = "ux_lite_latest_valid_session"
 
 def _rows_to_df(value: Any) -> pd.DataFrame:
     """
@@ -109,8 +111,6 @@ def _attach_guide_names_to_comments(
         on=["guideId", "app_sub"],
         how="left",
     )
-
-
 def _print_debug_summary(
     *,
     registry: pd.DataFrame,
@@ -141,25 +141,6 @@ def _print_debug_summary(
             .head(20)
             .to_string(index=False)
         )
-
-    if "guideName" in guide_sessions.columns:
-        orderup = guide_sessions.loc[
-            guide_sessions["guideName"].eq("OU: UX-Lite (app)")
-        ].copy()
-
-        if not orderup.empty:
-            print("\n=== OrderUp sessions: ===")
-            orderup_cols = [
-                "guideId",
-                "guideSessionId",
-                "reportingStart",
-                "reportingEnd",
-                "responseCount",
-            ]
-            existing_orderup_cols = [
-                col for col in orderup_cols if col in orderup.columns
-            ]
-            print(orderup[existing_orderup_cols].sort_values("reportingStart"))
 
     pop_preview_cols = [
         "guideSessionId",
@@ -235,7 +216,7 @@ def _filter_to_included_registry_apps(
         on=[app_col, "app_sub"],
         how="inner",
     )
-
+    
 
 def transform_all(raw: dict[str, object], *, debug: bool = False) -> dict[str, pd.DataFrame]:
     """
@@ -322,6 +303,11 @@ def transform_all(raw: dict[str, object], *, debug: bool = False) -> dict[str, p
         registry=registry,
     )
 
+    latest_valid_sessions = build_latest_valid_ux_lite_sessions(
+        guide_sessions=guide_sessions,
+        responses=responses,
+    )
+
     mau_df = _rows_to_df(raw[MAU_TABLE])
 
     tables["ux_lite_registry"] = registry
@@ -330,6 +316,7 @@ def transform_all(raw: dict[str, object], *, debug: bool = False) -> dict[str, p
     tables["ux_lite_local_events"] = score_events
     tables["ux_lite_local_responses"] = responses
     tables["ux_lite_local_comments"] = comment_events
+    tables[UX_LITE_LATEST_VALID_TABLE] = latest_valid_sessions
     tables[MAU_TABLE] = mau_df
 
     if debug:

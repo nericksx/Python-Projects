@@ -25,6 +25,7 @@ PARQUET_EXPORTS = [
     "ux_lite_local_events",
     "ux_lite_local_responses",
     "ux_lite_local_comments",
+    "ux_lite_latest_valid_session",
     "pendo_app_mau_rolling_30d",
     "guides_raw",
 ]

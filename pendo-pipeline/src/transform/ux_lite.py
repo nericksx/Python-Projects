@@ -115,6 +115,30 @@ UX_LITE_RESPONSE_COLUMNS = [
     "is_in_reporting_window",
 ]
 
+UX_LITE_LATEST_VALID_SESSION_COLUMNS = [
+    "ux_lite_reporting_period",
+    "ux_lite_reporting_period_sort",
+    "test_window_rule",
+    "app_sub",
+    "appId",
+    "guideSessionId",
+    "guideId",
+    "guideName",
+    "sessionLabel",
+    "reportingStart",
+    "reportingEnd",
+    "sessionStatus",
+    "complete_response_count",
+    "avg_ease_score",
+    "avg_usefulness_score",
+    "ux_lite_score",
+    "population",
+    "responseCount",
+    "has_required_scores",
+    "has_full_three_question_template",
+    "is_valid_latest_candidate",
+]
+
 
 def _empty_df(columns: list[str]) -> pd.DataFrame:
     """Return an empty dataframe with the requested columns."""
@@ -1168,6 +1192,236 @@ def build_ux_lite_responses(
             responses[col] = pd.NA
 
     return responses[UX_LITE_RESPONSE_COLUMNS].reset_index(drop=True)
+
+
+def _ux_lite_reporting_period_for_start(reporting_start: Any) -> dict[str, Any]:
+    """
+    Assign a UX-Lite reporting period from a test reportingStart date.
+
+    Business rule:
+    - Standard cadence: tests run in the first month of a quarter represent
+      the previous quarter.
+        Jan -> Q4 prior year
+        Apr -> Q1 current year
+        Jul -> Q2 current year
+        Oct -> Q3 current year
+
+    Transition exception:
+    - Q1 2026 allows April and May 2026 tests, so reused-guide April/May runs
+      can be resolved by "latest valid wins."
+    """
+    ts = pd.to_datetime(reporting_start, errors="coerce", utc=True)
+
+    if pd.isna(ts):
+        return {
+            "ux_lite_reporting_period": pd.NA,
+            "ux_lite_reporting_period_sort": pd.NA,
+            "test_window_rule": "missing_reporting_start",
+            "is_in_valid_test_window": False,
+        }
+
+    date = ts.normalize()
+
+    # Q1 2026 transition/testing window.
+    # THD fiscal April starts on Sunday 2026-03-29, so UX-Lite runs starting
+    # 2026-03-29 through May are valid Q1 2026 candidates.
+    if pd.Timestamp("2026-03-29", tz="UTC") <= date < pd.Timestamp("2026-06-01", tz="UTC"):
+        return {
+            "ux_lite_reporting_period": "Q1 2026",
+            "ux_lite_reporting_period_sort": "2026-Q1",
+            "test_window_rule": "q1_2026_transition_fiscal_apr_may",
+            "is_in_valid_test_window": True,
+        }
+
+    year = date.year
+    month = date.month
+
+    if month == 1:
+        return {
+            "ux_lite_reporting_period": f"Q4 {year - 1}",
+            "ux_lite_reporting_period_sort": f"{year - 1}-Q4",
+            "test_window_rule": "standard_first_month_previous_quarter",
+            "is_in_valid_test_window": True,
+        }
+
+    if month == 4:
+        quarter = 1
+    elif month == 7:
+        quarter = 2
+    elif month == 10:
+        quarter = 3
+    else:
+        return {
+            "ux_lite_reporting_period": pd.NA,
+            "ux_lite_reporting_period_sort": pd.NA,
+            "test_window_rule": "outside_standard_test_window",
+            "is_in_valid_test_window": False,
+        }
+
+    return {
+        "ux_lite_reporting_period": f"Q{quarter} {year}",
+        "ux_lite_reporting_period_sort": f"{year}-Q{quarter}",
+        "test_window_rule": "standard_first_month_previous_quarter",
+        "is_in_valid_test_window": True,
+    }
+
+
+def build_latest_valid_ux_lite_sessions(
+    guide_sessions: pd.DataFrame,
+    responses: pd.DataFrame,
+) -> pd.DataFrame:
+    """
+    Build one latest valid UX-Lite session per app/subscription/reporting period.
+
+    This table exists so Power BI does not need to decide whether reused-guide
+    sessions should be averaged. Python applies the business rule:
+    latest valid session wins within app_sub + appId + reporting period.
+    """
+    if guide_sessions.empty:
+        return _empty_df(UX_LITE_LATEST_VALID_SESSION_COLUMNS)
+
+    required_session_cols = [
+        "guideSessionId",
+        "guideId",
+        "guideName",
+        "appId",
+        "app_sub",
+        "reportingStart",
+        "reportingEnd",
+        "sessionLabel",
+    ]
+
+    _require_columns(
+        guide_sessions,
+        required_session_cols,
+        context="build_latest_valid_ux_lite_sessions guide_sessions",
+    )
+
+    sessions = guide_sessions.copy()
+    sessions["appId"] = sessions["appId"].map(_norm_app_id)
+    sessions["app_sub"] = sessions["app_sub"].map(_norm_str)
+    sessions["reportingStart"] = pd.to_datetime(
+        sessions["reportingStart"],
+        errors="coerce",
+        utc=True,
+    )
+    sessions["reportingEnd"] = pd.to_datetime(
+        sessions["reportingEnd"],
+        errors="coerce",
+        utc=True,
+    )
+
+    period_rows = sessions["reportingStart"].apply(_ux_lite_reporting_period_for_start)
+    period_df = pd.DataFrame(period_rows.tolist(), index=sessions.index)
+    sessions = pd.concat([sessions, period_df], axis=1)
+
+    if responses.empty:
+        response_summary = pd.DataFrame(
+            columns=[
+                "guideSessionId",
+                "complete_response_count",
+                "avg_ease_score",
+                "avg_usefulness_score",
+                "ux_lite_score",
+            ]
+        )
+    else:
+        _require_columns(
+            responses,
+            [
+                "guideSessionId",
+                "ease_score",
+                "usefulness_score",
+                "is_complete",
+            ],
+            context="build_latest_valid_ux_lite_sessions responses",
+        )
+
+        resp = responses.copy()
+        resp["ease_score"] = pd.to_numeric(resp["ease_score"], errors="coerce")
+        resp["usefulness_score"] = pd.to_numeric(
+            resp["usefulness_score"],
+            errors="coerce",
+        )
+
+        complete = resp[resp["is_complete"].astype(bool)].copy()
+        complete["response_avg_score"] = complete[
+            ["ease_score", "usefulness_score"]
+        ].mean(axis=1)
+
+        response_summary = (
+            complete.groupby("guideSessionId", as_index=False)
+            .agg(
+                complete_response_count=("guideSessionId", "size"),
+                avg_ease_score=("ease_score", "mean"),
+                avg_usefulness_score=("usefulness_score", "mean"),
+                ux_lite_score=("response_avg_score", "mean"),
+            )
+        )
+
+    sessions = sessions.merge(response_summary, on="guideSessionId", how="left")
+
+    sessions["complete_response_count"] = (
+        pd.to_numeric(
+            sessions["complete_response_count"],
+            errors="coerce",
+        )
+        .fillna(0)
+        .astype("int64")
+    )
+
+    for col in [
+        "avg_ease_score",
+        "avg_usefulness_score",
+        "ux_lite_score",
+        "population",
+        "responseCount",
+    ]:
+        if col not in sessions.columns:
+            sessions[col] = pd.NA
+
+    for col in [
+        "has_required_scores",
+        "has_full_three_question_template",
+        "session_has_window",
+    ]:
+        if col not in sessions.columns:
+            sessions[col] = False
+
+    sessions["is_valid_latest_candidate"] = (
+        sessions["is_in_valid_test_window"].astype(bool)
+        & sessions["session_has_window"].astype(bool)
+        & sessions["has_required_scores"].astype(bool)
+        & sessions["complete_response_count"].gt(0)
+    )
+
+    candidates = sessions[sessions["is_valid_latest_candidate"]].copy()
+
+    if candidates.empty:
+        return _empty_df(UX_LITE_LATEST_VALID_SESSION_COLUMNS)
+
+    candidates = candidates.sort_values(
+        [
+            "app_sub",
+            "appId",
+            "ux_lite_reporting_period_sort",
+            "reportingStart",
+            "guideSessionId",
+        ],
+        ascending=[True, True, True, False, False],
+        na_position="last",
+    )
+
+    latest = candidates.drop_duplicates(
+        ["app_sub", "appId", "ux_lite_reporting_period_sort"],
+        keep="first",
+    ).copy()
+
+    for col in UX_LITE_LATEST_VALID_SESSION_COLUMNS:
+        if col not in latest.columns:
+            latest[col] = pd.NA
+
+    return latest[UX_LITE_LATEST_VALID_SESSION_COLUMNS].reset_index(drop=True)
 
 
 def attach_population_to_sessions(
