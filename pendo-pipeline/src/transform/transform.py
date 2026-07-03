@@ -15,6 +15,7 @@ import pandas as pd
 
 from pendo.pulls.guides import guides_to_df
 from pendo.pulls.visitor_population import build_population_rows_for_sessions
+from app_registry import included_xm_apps, load_app_registry
 from transform.ux_lite import (
     attach_population_to_sessions,
     build_comment_events,
@@ -26,6 +27,7 @@ from transform.ux_lite import (
 )
 
 MAU_TABLE = "pendo_app_mau_rolling_30d"
+APP_REGISTRY_TABLE = "xm_pendo_app_registry"
 
 def _rows_to_df(value: Any) -> pd.DataFrame:
     """
@@ -173,6 +175,68 @@ def _print_debug_summary(
         print(pop_df[existing_pop_cols].head(20).to_string(index=False))
 
 
+def _filter_to_included_registry_apps(
+    df: pd.DataFrame,
+    app_registry: pd.DataFrame,
+    *,
+    app_col: str = "appId",
+) -> pd.DataFrame:
+    """
+    Filter a dataframe to apps included in the XM Pendo app registry.
+
+    Matching uses Pendo app ID + app_sub so default app IDs like -323232
+    remain subscription-specific.
+    """
+    if df.empty:
+        return df
+
+    required_df_cols = {app_col, "app_sub"}
+    missing_df_cols = required_df_cols - set(df.columns)
+
+    if missing_df_cols:
+        raise ValueError(
+            "Cannot filter dataframe to XM registry; missing columns: "
+            f"{sorted(missing_df_cols)}"
+        )
+
+    required_registry_cols = {
+        "include_in_xm_reporting",
+        "pendo_app_id",
+        "app_sub",
+    }
+    missing_registry_cols = required_registry_cols - set(app_registry.columns)
+
+    if missing_registry_cols:
+        raise ValueError(
+            "Cannot filter to XM registry; registry missing columns: "
+            f"{sorted(missing_registry_cols)}"
+        )
+
+    included_keys = (
+        app_registry.loc[
+            app_registry["include_in_xm_reporting"].astype(bool),
+            ["pendo_app_id", "app_sub"],
+        ]
+        .copy()
+        .assign(
+            pendo_app_id=lambda x: x["pendo_app_id"].astype(str).str.strip(),
+            app_sub=lambda x: x["app_sub"].astype(str).str.strip().str.upper(),
+        )
+        .rename(columns={"pendo_app_id": app_col})
+        .drop_duplicates([app_col, "app_sub"])
+    )
+
+    working = df.copy()
+    working[app_col] = working[app_col].astype(str).str.strip()
+    working["app_sub"] = working["app_sub"].astype(str).str.strip().str.upper()
+
+    return working.merge(
+        included_keys,
+        on=[app_col, "app_sub"],
+        how="inner",
+    )
+
+
 def transform_all(raw: dict[str, object], *, debug: bool = False) -> dict[str, pd.DataFrame]:
     """
     Transform raw Pendo pipeline outputs into loadable analytics tables.
@@ -201,6 +265,9 @@ def transform_all(raw: dict[str, object], *, debug: bool = False) -> dict[str, p
 
     tables: dict[str, pd.DataFrame] = {}
 
+    app_registry = load_app_registry()
+    tables[APP_REGISTRY_TABLE] = app_registry
+
     guides = raw["guides"]
     if not isinstance(guides, list):
         raise TypeError(f'Expected raw["guides"] to be a list, got {type(guides).__name__}')
@@ -213,6 +280,13 @@ def transform_all(raw: dict[str, object], *, debug: bool = False) -> dict[str, p
     guide_seen = _rows_to_df(raw["aggregations"])
 
     registry = build_ux_lite_registry(guides, guide_seen)
+
+    registry = _filter_to_included_registry_apps(
+        registry,
+        app_registry,
+        app_col="appId",
+    )
+
     poll_lookup = build_poll_lookup(registry)
 
     poll_events = raw["ux_lite_poll_events"]

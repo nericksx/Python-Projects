@@ -1,5 +1,3 @@
-# src/transform/ux_lite.py
-
 """
 UX-Lite transformation logic.
 
@@ -14,12 +12,14 @@ assigning responses to reporting windows.
 """
 
 import re
+from datetime import datetime, timezone
 from typing import Any
 
 import pandas as pd
 
 
-UX_LITE_CUTOFF_MS = 1761955200000  # 2025-11-01 00:00:00 UTC
+UX_LITE_CUTOFF_DATE = datetime(2026, 3, 30, tzinfo=timezone.utc)
+UX_LITE_CUTOFF_MS = int(UX_LITE_CUTOFF_DATE.timestamp() * 1000)
 UX_LITE_WINDOW_DAYS = 14
 SESSION_GAP_DAYS = 10
 
@@ -156,6 +156,34 @@ def _norm_str(value: Any) -> str:
         pass
 
     return str(value).strip()
+
+
+
+def _norm_app_id(value: Any) -> str:
+    """
+    Normalize Pendo app IDs for comparisons.
+
+    Pendo app IDs may arrive as strings, ints, or float-looking values
+    depending on the API/pandas path. Treat 627... and 627....0 as the same.
+    """
+    if value is None:
+        return ""
+
+    try:
+        if pd.isna(value):
+            return ""
+    except (TypeError, ValueError):
+        pass
+
+    if isinstance(value, float) and value.is_integer():
+        return str(int(value))
+
+    text = str(value).strip()
+
+    if text.endswith(".0") and text[:-2].lstrip("-").isdigit():
+        return text[:-2]
+
+    return text
 
 
 def _ms_to_dt(value: Any) -> pd.Timestamp:
@@ -407,6 +435,7 @@ def _derive_sessions_from_score_events(
 
     work = score_events.copy()
     work["guideId"] = work["guideId"].astype(str)
+    work["appId"] = work["appId"].map(_norm_app_id)
     work["app_sub"] = work["app_sub"].map(_norm_str)
 
     reg_meta_cols = [
@@ -435,6 +464,8 @@ def _derive_sessions_from_score_events(
     reg_meta = registry[reg_meta_cols].copy() if reg_meta_cols else pd.DataFrame()
     if not reg_meta.empty:
         reg_meta["guideId"] = reg_meta["guideId"].astype(str)
+        if "appId" in reg_meta.columns:
+            reg_meta["appId"] = reg_meta["appId"].map(_norm_app_id)
         if "app_sub" in reg_meta.columns:
             reg_meta["app_sub"] = reg_meta["app_sub"].map(_norm_str)
             reg_meta = reg_meta.drop_duplicates(["guideId", "app_sub"])
@@ -663,7 +694,7 @@ def build_ux_lite_registry(
             {
                 "guideId": guide_id,
                 "guideName": name_of(guide),
-                "appId": guide.get("appId"),
+                "appId": _norm_app_id(guide.get("appId")),
                 "app_sub": _norm_str(guide.get("app_sub")),
                 "state": guide.get("state"),
                 "name_matches_spec": name_matches_spec(guide),
@@ -904,6 +935,7 @@ def build_score_events(
 
     df["ts"] = pd.to_datetime(df["browserTime"], unit="ms", errors="coerce", utc=True)
     df["score"] = pd.to_numeric(df["pollResponse"], errors="coerce")
+    df["appId"] = df["appId"].map(_norm_app_id)
 
     df = df[df["ts"].notna() & df["score"].between(1, 5)].copy()
 
@@ -959,6 +991,7 @@ def build_comment_events(
         return _empty_df(COMMENT_EVENT_COLUMNS)
 
     df["ts"] = pd.to_datetime(df["browserTime"], unit="ms", errors="coerce", utc=True)
+    df["appId"] = df["appId"].map(_norm_app_id)
 
     # FreeForm comment text lives in pollResponse. fillna("") prevents missing
     # values from becoming the literal string "nan".
@@ -1013,6 +1046,7 @@ def build_ux_lite_responses(
 
     work = score_events.copy()
     work["guideId"] = work["guideId"].astype(str)
+    work["appId"] = work["appId"].map(_norm_app_id)
     work["app_sub"] = work["app_sub"].map(_norm_str)
 
     responses = (
@@ -1049,6 +1083,7 @@ def build_ux_lite_responses(
             .copy()
             .assign(
                 guideId=lambda df: df["guideId"].astype(str),
+                appId=lambda df: df["appId"].map(_norm_app_id),
                 app_sub=lambda df: df["app_sub"].map(_norm_str),
             )
             .drop_duplicates(["guideId", "app_sub"])
@@ -1063,6 +1098,8 @@ def build_ux_lite_responses(
     responses["appId_mismatch"] = (
         responses["guide_appId"].notna()
         & responses["appId"].notna()
+        & (responses["guide_appId"] != "")
+        & (responses["appId"] != "")
         & (responses["guide_appId"] != responses["appId"])
     )
     responses["appId"] = responses["guide_appId"].fillna(responses["appId"])

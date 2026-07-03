@@ -18,6 +18,7 @@ from duckdb_conn import get_connection, write_df, export_table_to_parquet
 
 
 PARQUET_EXPORTS = [
+    "xm_pendo_app_registry",
     "ux_lite_registry",
     "guide_sessions",
     "guide_session_population_rows",
