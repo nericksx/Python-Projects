@@ -23,7 +23,7 @@ from transform.ux_lite import build_ux_lite_registry
 from datetime import datetime, timezone
 
 
-CUTOFF_DATE = datetime(2026, 3, 30, tzinfo=timezone.utc)
+CUTOFF_DATE = datetime(2026, 2, 2, tzinfo=timezone.utc)
 CUTOFF_MS = int(CUTOFF_DATE.timestamp() * 1000)
 CHUNK_DAYS = 30
 MS_PER_DAY = 24 * 60 * 60 * 1000
