@@ -1355,8 +1355,16 @@ def build_latest_valid_ux_lite_sessions(
                 complete_response_count=("guideSessionId", "size"),
                 avg_ease_score=("ease_score", "mean"),
                 avg_usefulness_score=("usefulness_score", "mean"),
-                ux_lite_score=("response_avg_score", "mean"),
             )
+        )
+
+        response_summary["ux_lite_score"] = (
+            (
+                response_summary["avg_ease_score"] 
+                + response_summary["avg_usefulness_score"]
+                - 2
+            )
+            * 12.5
         )
 
     sessions = sessions.merge(response_summary, on="guideSessionId", how="left")
