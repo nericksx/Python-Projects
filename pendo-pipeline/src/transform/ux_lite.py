@@ -18,7 +18,7 @@ from typing import Any
 import pandas as pd
 
 
-UX_LITE_CUTOFF_DATE = datetime(2026, 3, 30, tzinfo=timezone.utc)
+UX_LITE_CUTOFF_DATE = datetime(2026, 2, 2, tzinfo=timezone.utc)
 UX_LITE_CUTOFF_MS = int(UX_LITE_CUTOFF_DATE.timestamp() * 1000)
 UX_LITE_WINDOW_DAYS = 14
 SESSION_GAP_DAYS = 10
@@ -58,6 +58,10 @@ COMMENT_EVENT_COLUMNS = [
     "visitorId",
     "appId",
     "app_sub",
+    "ux_lite_reporting_period",
+    "ux_lite_reporting_period_sort",
+    "test_window_rule",
+    "is_in_valid_test_window",
 ]
 
 GUIDE_SESSION_COLUMNS = [
@@ -1022,6 +1026,10 @@ def build_comment_events(
     df["comment"] = df["pollResponse"].fillna("").astype(str).str.strip()
     df = df[df["ts"].notna() & df["comment"].ne("")].copy()
 
+    period_rows = df["ts"].apply(_ux_lite_reporting_period_for_date)
+    period_df = pd.DataFrame(period_rows.tolist(), index=df.index)
+    df = pd.concat([df, period_df], axis=1)
+
     return (
         df[COMMENT_EVENT_COLUMNS]
         .sort_values("ts")
@@ -1194,61 +1202,58 @@ def build_ux_lite_responses(
     return responses[UX_LITE_RESPONSE_COLUMNS].reset_index(drop=True)
 
 
-def _ux_lite_reporting_period_for_start(reporting_start: Any) -> dict[str, Any]:
+def _ux_lite_reporting_period_for_date(value: Any) -> dict[str, Any]:
     """
-    Assign a UX-Lite reporting period from a test reportingStart date.
+    Assign a UX-Lite reporting period from a test/comment date.
 
-    Business rule:
-    - Standard cadence: tests run in the first month of a quarter represent
-      the previous quarter.
-        Jan -> Q4 prior year
-        Apr -> Q1 current year
-        Jul -> Q2 current year
-        Oct -> Q3 current year
+    Standard cadence:
+    - Tests run in the second month of a quarter represent the previous quarter.
+        Feb -> Q4 prior year
+        May -> Q1 current year
+        Aug -> Q2 current year
+        Nov -> Q3 current year
 
-    Transition exception:
-    - Q1 2026 allows April and May 2026 tests, so reused-guide April/May runs
-      can be resolved by "latest valid wins."
+    Q1 2026 transition exception:
+    - Latest valid test/comment activity from 2026-02-02 through 2026-05-31
+      maps to Q1 2026.
     """
-    ts = pd.to_datetime(reporting_start, errors="coerce", utc=True)
+    ts = pd.to_datetime(value, errors="coerce", utc=True)
 
     if pd.isna(ts):
         return {
             "ux_lite_reporting_period": pd.NA,
             "ux_lite_reporting_period_sort": pd.NA,
-            "test_window_rule": "missing_reporting_start",
+            "test_window_rule": "missing_date",
             "is_in_valid_test_window": False,
         }
 
     date = ts.normalize()
 
-    # Q1 2026 transition/testing window.
-    # THD fiscal April starts on Sunday 2026-03-29, so UX-Lite runs starting
-    # 2026-03-29 through May are valid Q1 2026 candidates.
-    if pd.Timestamp("2026-03-29", tz="UTC") <= date < pd.Timestamp("2026-06-01", tz="UTC"):
+    # Q1 2026 transition/backfill window.
+    if pd.Timestamp("2026-02-02", tz="UTC") <= date < pd.Timestamp("2026-06-01", tz="UTC"):
         return {
             "ux_lite_reporting_period": "Q1 2026",
             "ux_lite_reporting_period_sort": "2026-Q1",
-            "test_window_rule": "q1_2026_transition_fiscal_apr_may",
+            "test_window_rule": "q1_2026_transition_feb_may",
             "is_in_valid_test_window": True,
         }
 
     year = date.year
     month = date.month
 
-    if month == 1:
+    if month == 2:
         return {
             "ux_lite_reporting_period": f"Q4 {year - 1}",
             "ux_lite_reporting_period_sort": f"{year - 1}-Q4",
-            "test_window_rule": "standard_first_month_previous_quarter",
+            "test_window_rule": "standard_second_month_previous_quarter",
             "is_in_valid_test_window": True,
         }
 
-    if month == 4:
+    if month == 5:
         quarter = 1
-    elif month == 7:
+    elif month == 8:
         quarter = 2
-    elif month == 10:
+    elif month == 11:
         quarter = 3
     else:
         return {
@@ -1261,9 +1266,128 @@ def _ux_lite_reporting_period_for_start(reporting_start: Any) -> dict[str, Any]:
     return {
         "ux_lite_reporting_period": f"Q{quarter} {year}",
         "ux_lite_reporting_period_sort": f"{year}-Q{quarter}",
-        "test_window_rule": "standard_first_month_previous_quarter",
+        "test_window_rule": "standard_second_month_previous_quarter",
         "is_in_valid_test_window": True,
     }
+
+def _mau_reporting_period_for_snapshot_date(value: Any) -> dict[str, Any]:
+    """
+    Assign a UX-Lite reporting period to a rolling MAU snapshot.
+
+    This is intentionally different from the UX-Lite test/comment window helper.
+
+    MAU is a rolling active-user snapshot. For dashboard trending, each snapshot
+    should attach to the currently active UX-Lite reporting period so MAU growth
+    or decline can be reviewed alongside results and comments.
+
+    Reporting cadence buckets:
+    - Feb-Apr -> Q4 prior year
+    - May-Jul -> Q1 current year
+    - Aug-Oct -> Q2 current year
+    - Nov-Jan -> Q3 current/prior year adjusted
+
+    Q1 2026 transition:
+    - 2026-02-02 through 2026-07-31 maps to Q1 2026 so the backfill/transition
+      period remains attached to the Q1 2026 dashboard period.
+    """
+    ts = pd.to_datetime(value, errors="coerce", utc=True)
+
+    if pd.isna(ts):
+        return {
+            "ux_lite_reporting_period": pd.NA,
+            "ux_lite_reporting_period_sort": pd.NA,
+            "mau_reporting_period_rule": "missing_snapshot_date",
+            "is_valid_mau_reporting_snapshot": False,
+        }
+
+    date = ts.normalize()
+    year = date.year
+    month = date.month
+
+    # Q1 2026 transition/backfill/dashboard period.
+    if pd.Timestamp("2026-02-02", tz="UTC") <= date < pd.Timestamp("2026-08-01", tz="UTC"):
+        return {
+            "ux_lite_reporting_period": "Q1 2026",
+            "ux_lite_reporting_period_sort": "2026-Q1",
+            "mau_reporting_period_rule": "q1_2026_transition_feb_jul_snapshot",
+            "is_valid_mau_reporting_snapshot": True,
+        }
+
+    if month in [2, 3, 4]:
+        reporting_year = year - 1
+        reporting_quarter = 4
+        rule = "mau_snapshot_feb_apr_q4_prior_year"
+    elif month in [5, 6, 7]:
+        reporting_year = year
+        reporting_quarter = 1
+        rule = "mau_snapshot_may_jul_q1_current_year"
+    elif month in [8, 9, 10]:
+        reporting_year = year
+        reporting_quarter = 2
+        rule = "mau_snapshot_aug_oct_q2_current_year"
+    elif month in [11, 12]:
+        reporting_year = year
+        reporting_quarter = 3
+        rule = "mau_snapshot_nov_dec_q3_current_year"
+    else:  # January
+        reporting_year = year - 1
+        reporting_quarter = 3
+        rule = "mau_snapshot_jan_q3_prior_year"
+
+    return {
+        "ux_lite_reporting_period": f"Q{reporting_quarter} {reporting_year}",
+        "ux_lite_reporting_period_sort": f"{reporting_year}-Q{reporting_quarter}",
+        "mau_reporting_period_rule": rule,
+        "is_valid_mau_reporting_snapshot": True,
+    }
+
+
+def add_reporting_period_to_mau(
+    mau_df: pd.DataFrame,
+    *,
+    date_col: str = "pulled_at",
+) -> pd.DataFrame:
+    """
+    Add UX-Lite reporting-period fields to rolling MAU rows.
+
+    MAU remains a rolling active-user snapshot. The reporting period is assigned
+    from the MAU snapshot date so active-user growth/decline can be reviewed
+    alongside UX-Lite results and comments.
+    """
+    out = mau_df.copy()
+
+    for col in [
+        "ux_lite_reporting_period",
+        "ux_lite_reporting_period_sort",
+        "mau_reporting_period_rule",
+        "is_valid_mau_reporting_snapshot",
+    ]:
+        if col not in out.columns:
+            out[col] = pd.NA
+
+    if out.empty:
+        return out
+
+    _require_columns(
+        out,
+        [date_col],
+        context=f"add_reporting_period_to_mau {date_col}",
+    )
+
+    period_rows = out[date_col].apply(_mau_reporting_period_for_snapshot_date)
+    period_df = pd.DataFrame(period_rows.tolist(), index=out.index)
+
+    out = out.drop(
+        columns=[
+            "ux_lite_reporting_period",
+            "ux_lite_reporting_period_sort",
+            "mau_reporting_period_rule",
+            "is_valid_mau_reporting_snapshot",
+        ],
+        errors="ignore",
+    )
+
+    return pd.concat([out, period_df], axis=1)
 
 
 def build_latest_valid_ux_lite_sessions(
@@ -1311,7 +1435,7 @@ def build_latest_valid_ux_lite_sessions(
         utc=True,
     )
 
-    period_rows = sessions["reportingStart"].apply(_ux_lite_reporting_period_for_start)
+    period_rows = sessions["reportingStart"].apply(_ux_lite_reporting_period_for_date)
     period_df = pd.DataFrame(period_rows.tolist(), index=sessions.index)
     sessions = pd.concat([sessions, period_df], axis=1)
 
@@ -1345,9 +1469,6 @@ def build_latest_valid_ux_lite_sessions(
         )
 
         complete = resp[resp["is_complete"].astype(bool)].copy()
-        complete["response_avg_score"] = complete[
-            ["ease_score", "usefulness_score"]
-        ].mean(axis=1)
 
         response_summary = (
             complete.groupby("guideSessionId", as_index=False)
