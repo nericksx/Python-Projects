@@ -136,6 +136,10 @@ UX_LITE_LATEST_VALID_SESSION_COLUMNS = [
     "avg_ease_score",
     "avg_usefulness_score",
     "ux_lite_score",
+    "ease_top_box_count",
+    "usefulness_top_box_count",
+    "ease_response_count",
+    "usefulness_response_count",
     "population",
     "responseCount",
     "has_required_scores",
@@ -1447,6 +1451,10 @@ def build_latest_valid_ux_lite_sessions(
                 "avg_ease_score",
                 "avg_usefulness_score",
                 "ux_lite_score",
+                "ease_top_box_count",
+                "usefulness_top_box_count",
+                "ease_response_count",
+                "usefulness_response_count",
             ]
         )
     else:
@@ -1476,6 +1484,10 @@ def build_latest_valid_ux_lite_sessions(
                 complete_response_count=("guideSessionId", "size"),
                 avg_ease_score=("ease_score", "mean"),
                 avg_usefulness_score=("usefulness_score", "mean"),
+                ease_top_box_count=("ease_score", lambda s: s.ge(4).sum()),
+                usefulness_top_box_count=("usefulness_score", lambda s: s.ge(4).sum()),
+                ease_response_count=("ease_score", "count"),
+                usefulness_response_count=("usefulness_score", "count"),
             )
         )
 
@@ -1503,6 +1515,10 @@ def build_latest_valid_ux_lite_sessions(
         "avg_ease_score",
         "avg_usefulness_score",
         "ux_lite_score",
+        "ease_top_box_count",
+        "usefulness_top_box_count",
+        "ease_response_count",
+        "usefulness_response_count",
         "population",
         "responseCount",
     ]:
